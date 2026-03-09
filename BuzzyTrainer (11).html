@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>BuzzyTrainer 🐝</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #080e1a;
+  --card:  #111827;
+  --card2: #1a2436;
+  --acc1:  #fbbf24;
+  --acc2:  #f87171;
+  --acc3:  #34d399;
+  --acc4:  #a78bfa;
+  --muted: #6b7280;
+  --text:  #f1f5f9;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;padding:0 0 40px;
+  background-image:radial-gradient(ellipse at 20% 10%,rgba(167,139,250,.07) 0%,transparent 60%),
+                   radial-gradient(ellipse at 80% 80%,rgba(251,191,36,.05) 0%,transparent 60%)}
+
+/* HEADER */
+.header{width:100%;max-width:480px;display:flex;align-items:center;justify-content:space-between;
+  padding:16px 18px 8px}
+.logo{font-family:'Fredoka One',cursive;font-size:1.5rem;color:var(--acc1);letter-spacing:.5px}
+.logo span{color:var(--acc4)}
+.score-pill{background:var(--card2);border:1px solid rgba(251,191,36,.25);border-radius:999px;
+  padding:6px 14px;font-size:.82rem;font-weight:900;color:var(--acc1);display:flex;gap:8px;align-items:center}
+.level-badge{font-size:.62rem;color:var(--acc4);font-weight:700;letter-spacing:1px;text-transform:uppercase}
+
+/* STREAK */
+.streak-row{display:flex;gap:6px;margin:4px 0 10px;justify-content:center}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--card2);border:2px solid var(--muted);
+  transition:all .3s}
+.dot.lit{background:var(--acc1);border-color:var(--acc1);box-shadow:0 0 8px var(--acc1)}
+
+/* MAIN CARD */
+.card{width:100%;max-width:480px;background:var(--card);border-radius:24px;
+  border:1px solid rgba(255,255,255,.06);padding:22px 20px 20px;margin:0 12px}
+
+/* WORD DISPLAY */
+.word-label{font-size:.6rem;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);
+  text-align:center;margin-bottom:6px;font-weight:900}
+.word-big{font-family:'Fredoka One',cursive;font-size:3.2rem;text-align:center;line-height:1;
+  margin-bottom:4px;background:linear-gradient(135deg,var(--acc1),var(--acc4));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ipa-row{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:14px}
+.hint-row{text-align:center;font-size:.82rem;color:var(--acc3);font-weight:700;margin-bottom:16px;
+  background:rgba(52,211,153,.08);border-radius:8px;padding:5px 10px}
+
+/* MOUTH ANIMATION CONTAINER */
+.mouth-wrap{display:flex;justify-content:center;align-items:center;margin-bottom:16px}
+.mouth-stage{width:260px;height:130px;background:rgba(0,0,0,.4);border-radius:18px;
+  border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden;
+  box-shadow:0 0 30px rgba(251,191,36,.08) inset}
+.mouth-stage svg{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* PHONEME BREAKDOWN */
+.phoneme-row{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.ph-chip{flex:1;max-width:90px;background:var(--card2);border-radius:10px;padding:7px 4px;
+  text-align:center;border:1px solid rgba(255,255,255,.06);transition:all .3s}
+.ph-chip.active{border-color:var(--acc1);box-shadow:0 0 12px rgba(251,191,36,.3)}
+.ph-chip .ph-letter{font-family:'Fredoka One',cursive;font-size:1.6rem;line-height:1}
+.ph-chip .ph-sound{font-size:.62rem;color:var(--muted);font-weight:700;margin-top:2px}
+.ph-chip .ph-type{font-size:.55rem;text-transform:uppercase;letter-spacing:1px;margin-top:1px}
+
+/* ARTIC HINT */
+.artic-box{background:var(--card2);border-radius:12px;padding:10px 14px;margin-bottom:16px;
+  font-size:.78rem;line-height:1.5;color:#9ca3af;border-left:3px solid var(--acc4)}
+.artic-box strong{color:var(--text)}
+
+/* VIB INDICATOR */
+.vib-row{display:flex;gap:4px;justify-content:center;align-items:flex-end;height:28px;margin-bottom:16px}
+.vib-bar{width:8px;border-radius:3px;background:var(--acc4);opacity:.7}
+
+/* MIC SECTION */
+.mic-section{display:flex;flex-direction:column;align-items:center;gap:10px}
+.mic-status{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:700}
+.mic-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);transition:all .3s}
+.mic-dot.ready{background:var(--acc3);box-shadow:0 0 8px var(--acc3)}
+.mic-dot.rec{background:var(--acc2);box-shadow:0 0 10px var(--acc2);animation:pulse .8s infinite}
+.mic-dot.err{background:var(--acc2)}
+.mic-txt{color:var(--muted)}
+.mic-txt.ready{color:var(--acc3)}
+.mic-txt.rec{color:var(--acc2)}
+
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
+
+.mic-btn{width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;font-size:1.8rem;
+  background:linear-gradient(135deg,var(--acc1),#f59e0b);
+  box-shadow:0 4px 20px rgba(251,191,36,.4);position:relative;
+  transition:transform .15s,box-shadow .15s;display:flex;align-items:center;justify-content:center}
+.mic-btn:active{transform:scale(.93)}
+.mic-btn.rec{background:linear-gradient(135deg,var(--acc2),#dc2626);
+  box-shadow:0 4px 20px rgba(248,113,113,.5);animation:micpulse 1s infinite}
+@keyframes micpulse{0%,100%{box-shadow:0 4px 20px rgba(248,113,113,.5)}
+  50%{box-shadow:0 4px 32px rgba(248,113,113,.8),0 0 0 8px rgba(248,113,113,.15)}}
+.mic-ring{position:absolute;width:100%;height:100%;border-radius:50%;
+  border:2px solid rgba(255,255,255,.3);animation:ringpulse 2s infinite}
+@keyframes ringpulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.5);opacity:0}}
+.mic-hint{font-size:.7rem;color:var(--muted);font-weight:600}
+
+/* LEVEL METER */
+.lvl-bar{width:200px;height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;
+  opacity:0;transition:opacity .3s}
+.lvl-bar.on{opacity:1}
+.lvl-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--acc3),var(--acc1));
+  border-radius:3px;transition:width .08s}
+
+/* HEARD BOX */
+.heard-box{background:var(--card2);border-radius:12px;padding:10px 16px;min-height:44px;
+  display:flex;align-items:center;justify-content:center;width:100%;max-width:320px;
+  border:1.5px solid rgba(255,255,255,.06);transition:all .4s}
+.heard-box.correct{border-color:var(--acc3);background:rgba(52,211,153,.08);
+  box-shadow:0 0 20px rgba(52,211,153,.2)}
+.heard-box.wrong{border-color:var(--acc2);background:rgba(248,113,113,.08);
+  box-shadow:0 0 20px rgba(248,113,113,.2)}
+#heardText{font-size:.85rem;font-weight:700;text-align:center}
+
+/* RESULT BANNER */
+.result-banner{display:none;border-radius:14px;padding:12px 16px;text-align:center;
+  width:100%;max-width:320px;animation:slideUp .3s ease}
+.result-banner.correct{display:block;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.3)}
+.result-banner.wrong{display:block;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3)}
+.result-icon{font-size:1.6rem;margin-bottom:4px}
+.result-msg{font-size:.95rem;font-weight:900;color:var(--text)}
+.result-sub{font-size:.75rem;color:var(--muted);margin-top:3px}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* NAV BUTTONS */
+.nav-row{display:flex;gap:10px;width:100%;max-width:320px;margin-top:4px}
+.btn{flex:1;padding:11px 0;border-radius:12px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;
+  font-size:.85rem;font-weight:900;transition:all .15s;letter-spacing:.3px}
+.btn:active{transform:scale(.96)}
+.btn-skip{background:var(--card2);color:var(--muted);border:1px solid rgba(255,255,255,.08)}
+.btn-skip:hover{color:var(--text)}
+.btn-retry{background:var(--card2);color:var(--acc1);border:1px solid rgba(251,191,36,.2)}
+.btn-next{background:linear-gradient(135deg,var(--acc3),#059669);color:#fff;
+  box-shadow:0 4px 14px rgba(52,211,153,.3)}
+.btn-next:disabled{background:var(--card2);color:var(--muted);box-shadow:none;cursor:default}
+
+/* ERROR */
+.err-box{display:none;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);
+  border-radius:12px;padding:10px 14px;font-size:.78rem;color:var(--acc2);
+  text-align:center;width:100%;max-width:480px;margin:8px 12px 0}
+.err-box.show{display:block}
+
+/* CONFETTI */
+.confetti-piece{position:fixed;width:8px;height:8px;border-radius:2px;pointer-events:none;
+  animation:fall 1.2s ease-in forwards}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}
+  100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* WORD CHIPS (for correct celebration) */
+.chip-anim span{display:inline-block;transition:all .2s}
+.chip-anim span.pop{transform:scale(1.4) translateY(-4px);color:var(--acc1)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">🐝 Buzzy<span>Trainer</span></div>
+  <div class="score-pill">
+    <span>⭐ <span id="scoreNum">0</span></span>
+    <span class="level-badge" id="levelBadge">Beginner</span>
+  </div>
+</div>
+
+<div class="streak-row" id="streakRow"></div>
+
+<div class="card">
+  <!-- Word display -->
+  <div class="word-label">Say this word</div>
+  <div class="word-big chip-anim" id="wordBig">BAT</div>
+  <div class="ipa-row" id="ipaRow">/bæt/</div>
+  <div class="hint-row" id="hintRow">Buh · Ah · T</div>
+
+  <!-- Animated mouth -->
+  <div class="mouth-wrap">
+    <div class="mouth-stage" id="mouthStage">
+      <!-- SVG injected here -->
+    </div>
+  </div>
+
+  <!-- Phoneme breakdown -->
+  <div class="phoneme-row" id="phonemeRow"></div>
+
+  <!-- Articulation hint -->
+  <div class="artic-box" id="articBox"></div>
+
+  <!-- Vibration bars -->
+  <div class="vib-row" id="vibRow"></div>
+
+  <!-- Mic section -->
+  <div class="mic-section">
+    <div class="mic-status">
+      <div class="mic-dot" id="micDot"></div>
+      <span class="mic-txt" id="micTxt">Tap mic to start</span>
+    </div>
+    <div class="lvl-bar" id="lvlBar"><div class="lvl-fill" id="lvlFill"></div></div>
+    <button class="mic-btn" id="micBtn" onclick="handleMic()">
+      <div class="mic-ring"></div>🎤
+    </button>
+    <div class="mic-hint" id="micHint">Tap to start</div>
+
+    <!-- Heard box -->
+    <div class="heard-box" id="heardBox">
+      <span id="heardText" style="color:var(--muted)">—</span>
+    </div>
+
+    <!-- Result banner -->
+    <div class="result-banner" id="resultBanner">
+      <div class="result-icon" id="resultIcon"></div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="result-sub" id="resultSub"></div>
+    </div>
+
+    <!-- Nav buttons -->
+    <div class="nav-row">
+      <button class="btn btn-skip" onclick="doSkip()">↩ Skip</button>
+      <button class="btn btn-retry" onclick="doRetry()">🔄 Retry</button>
+      <button class="btn btn-next" id="nextBtn" onclick="doNext()" disabled>Next →</button>
+    </div>
+  </div>
+</div>
+
+<div class="err-box" id="errBox"></div>
+
+<script>
+/* ═══════════════════════
+   CVC WORD DATA
+═══════════════════════ */
+const WORDS = [
+  { word:'BAT', ipa:'/bæt/', hint:'Buh · Ah · T',
+    phones:[{l:'B',s:'Buh',t:'c'},{l:'A',s:'Ah',t:'v'},{l:'T',s:'T',t:'c'}],
+    artic:'<strong>BAT /bæt/</strong> — Press lips → POP open for <em>B</em>, jaw drops wide for <em>Ah</em>, tongue taps ridge for final <em>T</em>.',
+    vib:[150,60,400,60,80], anim:'bat' },
+  { word:'MAT', ipa:'/mæt/', hint:'Mmm · Ah · T',
+    phones:[{l:'M',s:'Mmm',t:'c'},{l:'A',s:'Ah',t:'v'},{l:'T',s:'T',t:'c'}],
+    artic:'<strong>MAT /mæt/</strong> — Lips sealed hum for <em>M</em>, jaw drops wide for <em>Ah</em>, tongue taps for final <em>T</em>.',
+    vib:[200,60,400,60,80], anim:'mat' },
+  { word:'SUN', ipa:'/sʌn/', hint:'Sss · Uh · N',
+    phones:[{l:'S',s:'Sss',t:'c'},{l:'U',s:'Uh',t:'v'},{l:'N',s:'N',t:'c'}],
+    artic:'<strong>SUN /sʌn/</strong> — Teeth hiss for <em>S</em>, neutral mid-open for <em>Uh</em>, tongue tip up for final <em>N</em>.',
+    vib:[80,60,300,60,120], anim:'sun' },
+  { word:'TAP', ipa:'/tæp/', hint:'T · Ah · P',
+    phones:[{l:'T',s:'T',t:'c'},{l:'A',s:'Ah',t:'v'},{l:'P',s:'P',t:'c'}],
+    artic:'<strong>TAP /tæp/</strong> — Tongue tap for <em>T</em>, jaw wide for <em>Ah</em>, lips press closed for final <em>P</em>.',
+    vib:[80,60,400,60,150], anim:'tap' },
+  { word:'BED', ipa:'/bɛd/', hint:'Buh · Eh · D',
+    phones:[{l:'B',s:'Buh',t:'c'},{l:'E',s:'Eh',t:'v'},{l:'D',s:'D',t:'c'}],
+    artic:'<strong>BED /bɛd/</strong> — Lips pop for <em>B</em>, medium open for <em>Eh</em>, tongue taps for final <em>D</em>.',
+    vib:[150,60,350,60,80], anim:'bed' },
+  { word:'MUD', ipa:'/mʌd/', hint:'Mmm · Uh · D',
+    phones:[{l:'M',s:'Mmm',t:'c'},{l:'U',s:'Uh',t:'v'},{l:'D',s:'D',t:'c'}],
+    artic:'<strong>MUD /mʌd/</strong> — Nasal hum for <em>M</em>, neutral mouth for <em>Uh</em>, tongue tap for final <em>D</em>.',
+    vib:[200,60,300,60,80], anim:'mud' },
+  { word:'SIT', ipa:'/sɪt/', hint:'Sss · Ih · T',
+    phones:[{l:'S',s:'Sss',t:'c'},{l:'I',s:'Ih',t:'v'},{l:'T',s:'T',t:'c'}],
+    artic:'<strong>SIT /sɪt/</strong> — Teeth hiss for <em>S</em>, small high opening for <em>Ih</em>, tongue taps for final <em>T</em>.',
+    vib:[80,60,250,60,80], anim:'sit' },
+  { word:'DOT', ipa:'/dɒt/', hint:'Duh · Oh · T',
+    phones:[{l:'D',s:'Duh',t:'c'},{l:'O',s:'Oh',t:'v'},{l:'T',s:'T',t:'c'}],
+    artic:'<strong>DOT /dɒt/</strong> — Tongue tap for <em>D</em>, round lips for <em>Oh</em>, tongue taps for final <em>T</em>.',
+    vib:[80,60,380,60,80], anim:'dot' },
+];
+
+/* ═══════════════════════
+   MOUTH ANIMATION FRAMES
+   Each word has 5 keyframes: start→C1→V→C2→end
+   SVG viewBox="0 0 260 130" — lips only
+═══════════════════════ */
+const MOUTH = {
+  // Closed (rest) — used for B/M/P endings and starts
+  closed:`<ellipse cx="130" cy="68" rx="62" ry="10" fill="#c8705a"/>
+    <path d="M68 68 Q130 62 192 68" fill="none" stroke="#a85440" stroke-width="2" stroke-linecap="round"/>
+    <path d="M68 68 Q130 74 192 68" fill="none" stroke="#c07060" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="68" cy="68" r="4" fill="#b87060"/><circle cx="192" cy="68" r="4" fill="#b87060"/>`,
+
+  // Teeth-close (S/T/D) — lips slightly parted showing teeth
+  teeth:`<ellipse cx="130" cy="66" rx="64" ry="14" fill="#d4846a"/>
+    <path d="M68 60 Q130 54 192 60 Q192 68 130 70 Q68 68 68 60" fill="#c8705a"/>
+    <path d="M72 60 Q130 64 188 60 Q188 67 130 68 Q72 67 72 60" fill="#1a0a0a"/>
+    <rect x="88" y="56" width="14" height="9" fill="white" rx="2" opacity=".95"/>
+    <rect x="104" y="56" width="14" height="9" fill="white" rx="2" opacity=".95"/>
+    <rect x="120" y="56" width="14" height="9" fill="white" rx="2" opacity=".95"/>
+    <rect x="136" y="56" width="14" height="9" fill="white" rx="2" opacity=".95"/>
+    <path d="M68 68 Q130 74 192 68 Q168 80 130 82 Q92 80 68 68" fill="#d4785a"/>`,
+
+  // Hiss (S) — narrow gap, lots of teeth
+  hiss:`<ellipse cx="130" cy="65" rx="65" ry="13" fill="#d4846a"/>
+    <path d="M66 60 Q130 54 194 60 Q194 66 130 68 Q66 66 66 60" fill="#c8705a"/>
+    <path d="M70 60 Q130 63 190 60 Q190 66 130 67 Q70 66 70 60" fill="#0d0505"/>
+    <rect x="84" y="56" width="13" height="8" fill="white" rx="1.5" opacity=".98"/>
+    <rect x="99" y="56" width="13" height="8" fill="white" rx="1.5" opacity=".98"/>
+    <rect x="114" y="56" width="13" height="8" fill="white" rx="1.5" opacity=".98"/>
+    <rect x="129" y="56" width="13" height="8" fill="white" rx="1.5" opacity=".98"/>
+    <rect x="144" y="56" width="13" height="8" fill="white" rx="1.5" opacity=".98"/>
+    <path d="M66 68 Q130 76 194 68 Q170 84 130 87 Q90 84 66 68" fill="#c8705a"/>`,
+
+  // Wide open (A/Ah) — maximum jaw drop
+  wide:`<ellipse cx="130" cy="72" rx="66" ry="32" fill="#c23838" opacity=".85"/>
+    <path d="M66 54 Q92 40 116 48 Q130 40 144 48 Q168 40 194 54" fill="#c8705a" stroke="#a85440" stroke-width="1.5"/>
+    <path d="M66 54 Q130 86 194 54 Q170 98 130 102 Q90 98 66 54" fill="#d4785a"/>
+    <path d="M74 62 Q130 82 186 62 Q178 76 130 80 Q82 76 74 62" fill="#130303"/>
+    <ellipse cx="130" cy="72" rx="38" ry="11" fill="#c23838" opacity=".7"/>
+    <rect x="88" y="55" width="16" height="12" fill="white" rx="2.5" opacity=".95"/>
+    <rect x="107" y="55" width="16" height="12" fill="white" rx="2.5" opacity=".95"/>
+    <rect x="126" y="55" width="16" height="12" fill="white" rx="2.5" opacity=".95"/>
+    <rect x="145" y="55" width="16" height="12" fill="white" rx="2.5" opacity=".95"/>
+    <circle cx="66" cy="54" r="4" fill="#b87060"/><circle cx="194" cy="54" r="4" fill="#b87060"/>`,
+
+  // Mid open (E/Eh)
+  mid:`<ellipse cx="130" cy="68" rx="65" ry="24" fill="#d4846a"/>
+    <path d="M66 56 Q130 46 194 56 Q194 64 130 66 Q66 64 66 56" fill="#c8705a"/>
+    <path d="M66 66 Q130 78 194 66 Q172 88 130 92 Q88 88 66 66" fill="#d4785a"/>
+    <path d="M74 64 Q130 74 186 64 Q178 76 130 80 Q82 76 74 64" fill="#130303"/>
+    <rect x="84" y="55" width="15" height="11" fill="white" rx="2" opacity=".95"/>
+    <rect x="101" y="55" width="15" height="11" fill="white" rx="2" opacity=".95"/>
+    <rect x="118" y="55" width="15" height="11" fill="white" rx="2" opacity=".95"/>
+    <rect x="135" y="55" width="15" height="11" fill="white" rx="2" opacity=".95"/>
+    <circle cx="66" cy="60" r="5" fill="#b87060"/><circle cx="194" cy="60" r="5" fill="#b87060"/>`,
+
+  // Small (I/Ih) — slight opening, smile-ish
+  small:`<ellipse cx="130" cy="65" rx="64" ry="18" fill="#d4846a"/>
+    <path d="M68 56 Q130 48 192 56 Q192 62 130 64 Q68 62 68 56" fill="#c8705a"/>
+    <path d="M68 64 Q130 72 192 64 Q174 80 130 84 Q86 80 68 64" fill="#d4785a"/>
+    <path d="M76 62 Q130 68 184 62 Q178 70 130 73 Q82 70 76 62" fill="#130303"/>
+    <rect x="90" y="56" width="14" height="8" fill="white" rx="2" opacity=".95"/>
+    <rect x="106" y="56" width="14" height="8" fill="white" rx="2" opacity=".95"/>
+    <rect x="122" y="56" width="14" height="8" fill="white" rx="2" opacity=".95"/>
+    <rect x="138" y="56" width="14" height="8" fill="white" rx="2" opacity=".95"/>
+    <circle cx="68" cy="60" r="5" fill="#b87060"/><circle cx="192" cy="60" r="5" fill="#b87060"/>`,
+
+  // Round (O/Oh) — rounded lips
+  round:`<ellipse cx="130" cy="68" rx="46" ry="28" fill="#c23838" opacity=".8"/>
+    <ellipse cx="130" cy="68" rx="50" ry="32" fill="none" stroke="#c8705a" stroke-width="8"/>
+    <path d="M82 52 Q130 42 178 52 Q186 68 178 84 Q130 94 82 84 Q74 68 82 52" fill="#d4785a"/>
+    <ellipse cx="130" cy="68" rx="32" ry="20" fill="#130303"/>
+    <ellipse cx="130" cy="68" rx="20" ry="12" fill="#c23838" opacity=".7"/>
+    <path d="M82 52 Q130 46 178 52" fill="none" stroke="#a85440" stroke-width="1.5"/>`,
+
+  // Neutral (U/Uh) — slightly open, relaxed
+  neutral:`<ellipse cx="130" cy="67" rx="58" ry="20" fill="#d4846a"/>
+    <path d="M74 58 Q130 50 186 58 Q186 65 130 67 Q74 65 74 58" fill="#c8705a"/>
+    <path d="M74 67 Q130 77 186 67 Q166 86 130 89 Q94 86 74 67" fill="#d4785a"/>
+    <path d="M82 64 Q130 72 178 64 Q172 73 130 76 Q88 73 82 64" fill="#130303"/>
+    <rect x="92" y="56" width="14" height="10" fill="white" rx="2" opacity=".9"/>
+    <rect x="108" y="56" width="14" height="10" fill="white" rx="2" opacity=".9"/>
+    <rect x="124" y="56" width="14" height="10" fill="white" rx="2" opacity=".9"/>
+    <rect x="140" y="56" width="14" height="10" fill="white" rx="2" opacity=".9"/>`,
+
+  // Sealed (M) — lips pressed firmly together with slight hump
+  sealed:`<path d="M68 66 Q96 60 130 62 Q164 60 192 66 Q164 74 130 72 Q96 74 68 66" fill="#c8705a"/>
+    <path d="M68 66 Q130 63 192 66" fill="none" stroke="#a85440" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M68 66 Q130 70 192 66" fill="none" stroke="#b87060" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="68" cy="66" r="5" fill="#b87060"/><circle cx="192" cy="66" r="5" fill="#b87060"/>`,
+};
+
+/* Word → frame sequence [frame, duration_ms] */
+const ANIMS = {
+  // B-A-T: closed→burst→wide→teeth→closed
+  bat:  [['closed',400],['teeth',100],['wide',450],['teeth',200],['closed',300]],
+  // M-A-T: sealed→open→wide→teeth→closed
+  mat:  [['sealed',500],['sealed',200],['wide',450],['teeth',200],['closed',300]],
+  // S-U-N: hiss→neutral→teeth→teeth→neutral
+  sun:  [['hiss',350],['neutral',400],['teeth',200],['neutral',200],['teeth',200]],
+  // T-A-P: teeth→wide→closed→closed
+  tap:  [['teeth',200],['wide',450],['closed',200],['closed',300],['neutral',200]],
+  // B-E-D: closed→burst→mid→teeth→teeth
+  bed:  [['closed',400],['teeth',100],['mid',420],['teeth',200],['teeth',200]],
+  // M-U-D: sealed→neutral→teeth→teeth
+  mud:  [['sealed',500],['sealed',150],['neutral',380],['teeth',200],['teeth',200]],
+  // S-I-T: hiss→small→teeth→closed
+  sit:  [['hiss',350],['small',380],['teeth',200],['closed',300],['teeth',100]],
+  // D-O-T: teeth→round→teeth→closed
+  dot:  [['teeth',200],['round',500],['teeth',200],['closed',300],['neutral',200]],
+};
+
+/* ═══════════════════════
+   MATCHING (Word alts)
+═══════════════════════ */
+const WORD_ALTS = {
+  bat:['bat','bad','back','bats'],
+  mat:['mat','mad','map','mats','match'],
+  sun:['sun','son','sung','done','fun','run','bun'],
+  tap:['tap','tab','taps','cap','nap','map'],
+  bed:['bed','beds','bad','red','dead','head','said'],
+  mud:['mud','mad','bud','mug','muds'],
+  sit:['sit','sip','six','bit','kit','hit','sits'],
+  dot:['dot','dog','dock','got','hot','lot','dots','not'],
+};
+
+function lev(a,b){const m=a.length,n=b.length,d=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?j?0:i:j));for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)d[i][j]=a[i-1]===b[j-1]?d[i-1][j-1]:1+Math.min(d[i-1][j],d[i][j-1],d[i-1][j-1]);return d[m][n];}
+function matchWord(heard, target) {
+  const h = heard.trim().toLowerCase();
+  const t = target.toLowerCase();
+  const alts = WORD_ALTS[t] || [t];
+  const words = h.split(/\s+/);
+  for (const w of words) {
+    if (alts.includes(w)) return true;
+    if (lev(w, t) <= 1) return true;
+    for (const a of alts) if (lev(w, a) <= 1) return true;
+  }
+  return false;
+}
+
+/* ═══════════════════════
+   STATE
+═══════════════════════ */
+let idx = 0, score = 0, streak = 0;
+let sr = null, isListening = false, micReady = false;
+let mediaStream = null, audioCtx = null, analyser = null, rafId = null;
+let mediaRecorder = null, audioChunks = [], recTimer = null;
+let animTimers = [];
+
+/* ═══════════════════════
+   INIT
+═══════════════════════ */
+window.addEventListener('DOMContentLoaded', () => {
+  buildStreak(); renderLevel();
+  renderCurrent();
+});
+
+/* ═══════════════════════
+   RENDER CURRENT WORD
+═══════════════════════ */
+function cur() { return WORDS[idx]; }
+
+function renderCurrent() {
+  const w = cur();
+  // Word + IPA + hint
+  document.getElementById('wordBig').textContent = w.word;
+  document.getElementById('ipaRow').textContent = w.ipa;
+  document.getElementById('hintRow').textContent = w.hint;
+  // Artic box
+  document.getElementById('articBox').innerHTML = w.artic;
+  // Phoneme chips
+  const row = document.getElementById('phonemeRow');
+  const colors = {c:'var(--acc4)', v:'var(--acc1)'};
+  row.innerHTML = w.phones.map((p,i) =>
+    `<div class="ph-chip" id="ph${i}">
+      <div class="ph-letter" style="color:${colors[p.t]}">${p.l}</div>
+      <div class="ph-sound">${p.s}</div>
+      <div class="ph-type" style="color:${colors[p.t]}">${p.t==='v'?'vowel':'consonant'}</div>
+    </div>`
+  ).join('');
+  // Mouth animation
+  startMouthAnim(w.anim);
+  // Vibration bars
+  renderVibBars(w);
+  // Haptic
+  if (navigator.vibrate) navigator.vibrate(w.vib);
+  // Reset result
+  clearResult();
+}
+
+/* ═══════════════════════
+   MOUTH ANIMATION
+═══════════════════════ */
+function startMouthAnim(animKey) {
+  animTimers.forEach(t => clearTimeout(t));
+  animTimers = [];
+  const frames = ANIMS[animKey] || ANIMS.bat;
+  const stage = document.getElementById('mouthStage');
+  let delay = 0;
+  // Loop the animation
+  function runLoop() {
+    frames.forEach(([frame, dur], fi) => {
+      const t = setTimeout(() => {
+        stage.innerHTML = `<svg viewBox="0 0 260 130" xmlns="http://www.w3.org/2000/svg">${MOUTH[frame]}</svg>`;
+        // Highlight phoneme chip
+        document.querySelectorAll('.ph-chip').forEach(c => c.classList.remove('active'));
+        const chipMap = frames.length === 5
+          ? [null, 0, 1, 2, null]
+          : [0, 1, 2, null, null];
+        if (chipMap[fi] !== null) {
+          const chip = document.getElementById('ph' + chipMap[fi]);
+          if (chip) chip.classList.add('active');
+        }
+      }, delay);
+      animTimers.push(t);
+      delay += dur;
+    });
+    // Restart loop
+    const loopT = setTimeout(runLoop, delay + 200);
+    animTimers.push(loopT);
+    delay = 0;
+  }
+  runLoop();
+}
+
+/* ═══════════════════════
+   VIBRATION BARS (visual)
+═══════════════════════ */
+function renderVibBars(w) {
+  const row = document.getElementById('vibRow');
+  // Simple bars representing the rhythm
+  const pattern = w.vib;
+  const bars = pattern.filter((_,i) => i%2===0); // on-times only
+  const maxH = 24;
+  const maxVal = Math.max(...bars);
+  row.innerHTML = bars.map(v => {
+    const h = Math.max(6, Math.round((v/maxVal)*maxH));
+    return `<div class="vib-bar" style="height:${h}px;animation:vibpulse ${(v/400+.4).toFixed(1)}s ease-in-out infinite alternate"></div>`;
+  }).join('');
+  if (!document.getElementById('vibStyle')) {
+    const s = document.createElement('style');
+    s.id = 'vibStyle';
+    s.textContent = '@keyframes vibpulse{from{opacity:.4;transform:scaleY(.6)}to{opacity:1;transform:scaleY(1)}}';
+    document.head.appendChild(s);
+  }
+}
+
+/* ═══════════════════════
+   STREAK + LEVEL
+═══════════════════════ */
+function buildStreak() {
+  const row = document.getElementById('streakRow');
+  row.innerHTML = Array.from({length:5},(_,i) =>
+    `<div class="dot${i < streak ? ' lit' : ''}"></div>`).join('');
+}
+function renderLevel() {
+  const lvls = [{t:'Beginner',min:0},{t:'Learner',min:30},{t:'Practitioner',min:80},{t:'Speaker',min:160}];
+  const l = [...lvls].reverse().find(l => score >= l.min) || lvls[0];
+  document.getElementById('levelBadge').textContent = l.t;
+}
+
+/* ═══════════════════════
+   MIC INIT
+═══════════════════════ */
+async function initMicOnFirstTap() {
+  setMicUI('idle', 'Requesting microphone...');
+  try {
+    mediaStream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,channelCount:1}});
+  } catch(err) {
+    const denied = err.name==='NotAllowedError'||err.name==='PermissionDeniedError';
+    showErr(denied
+      ? 'Mic denied. iPhone: Settings → Safari → Microphone → Allow. Then reload.'
+      : 'Mic error: '+err.message);
+    setMicUI('err','Mic blocked'); return false;
+  }
+  // Speech Recognition for word matching
+  const SRA = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SRA) {
+    sr = new SRA();
+    sr.lang='en-US'; sr.continuous=false; sr.interimResults=true; sr.maxAlternatives=8;
+    let sttTimer=null, lastInterim='', lastAlts=[];
+    sr.onstart = () => { isListening=true; setMicUI('rec','Listening... say the word!'); startMeter(); };
+    sr.onresult = (e) => {
+      const last = e.results[e.results.length-1];
+      lastInterim = last[0].transcript.trim().toLowerCase();
+      lastAlts = Array.from(last).map(a=>a.transcript.trim().toLowerCase());
+      document.getElementById('heardText').textContent = lastInterim||'...';
+      document.getElementById('heardText').style.cssText = 'color:var(--muted)';
+      clearTimeout(sttTimer);
+      if (last.isFinal) {
+        stopSTT(); evaluateWord(lastInterim, lastAlts);
+      } else {
+        sttTimer = setTimeout(()=>{ if(isListening&&lastInterim){stopSTT();evaluateWord(lastInterim,lastAlts);} },900);
+      }
+    };
+    sr.onerror = (e) => {
+      clearTimeout(sttTimer); stopSTT();
+      showResult(null, e.error==='no-speech'?'No speech heard':'Error: '+e.error, 'Tap mic and try again.');
+    };
+    sr.onend = () => {
+      clearTimeout(sttTimer);
+      if (isListening) { if(lastInterim){stopSTT();evaluateWord(lastInterim,lastAlts);}else stopSTT(); }
+    };
+  } else {
+    showErr('Speech recognition not supported on this browser. Try Chrome or Safari.');
+  }
+  micReady=true;
+  setMicUI('ready','Mic ready - tap to speak');
+  return true;
+}
+
+/* ═══════════════════════
+   MIC BUTTON
+═══════════════════════ */
+async function handleMic() {
+  hideErr();
+  if (!micReady) {
+    const ok = await initMicOnFirstTap();
+    if (!ok) return;
+    setTimeout(startCapture, 400);
+    return;
+  }
+  if (isListening) stopSTT();
+  else startCapture();
+}
+
+function startCapture() {
+  if (!micReady) return;
+  document.getElementById('heardBox').className = 'heard-box';
+  document.getElementById('heardText').textContent = '...';
+  document.getElementById('heardText').style.cssText = '';
+  document.getElementById('resultBanner').className = 'result-banner';
+  document.getElementById('nextBtn').disabled = true;
+  hideErr();
+  if (sr) startSTT();
+  else showErr('Speech recognition not available. Try Chrome or Safari.');
+}
+
+function startSTT() {
+  const btn = document.getElementById('micBtn');
+  btn.classList.add('rec'); btn.innerHTML='<div class="mic-ring"></div>⏹️';
+  document.getElementById('micHint').textContent='Tap to stop';
+  try { sr.start(); } catch(e) {
+    try { sr.abort(); } catch(_) {}
+    setTimeout(()=>{ try{sr.start();}catch(e2){showErr('Could not start. Try reloading.');} },350);
+  }
+}
+function stopSTT() {
+  isListening=false; stopMeter();
+  const btn=document.getElementById('micBtn');
+  btn.classList.remove('rec'); btn.innerHTML='<div class="mic-ring"></div>🎤';
+  document.getElementById('micHint').textContent='Tap to speak';
+  setMicUI('ready','Tap mic to try again');
+  try{sr.stop();}catch(_){}
+}
+
+/* ═══════════════════════
+   EVALUATE WORD
+═══════════════════════ */
+function evaluateWord(primary, alts) {
+  const w = cur();
+  const allHeard = [...new Set([primary, ...alts])];
+  const matched = allHeard.some(t => matchWord(t, w.word));
+  document.getElementById('heardText').textContent = primary||'(nothing heard)';
+  document.getElementById('heardText').style.cssText = '';
+  if (matched) {
+    score += 15; streak = Math.min(streak+1, 5);
+    document.getElementById('scoreNum').textContent = score;
+    buildStreak(); renderLevel();
+    document.getElementById('nextBtn').disabled = false;
+    celebrate();
+    animChips();
+    showResult(true,
+      ['Great job! 🎉','Well done! ⭐','Excellent! 🌟','Nailed it! 🏆','Perfect! 🎊'][Math.floor(Math.random()*5)],
+      '"'+w.word+'" '+w.ipa+' — correct!');
+  } else {
+    streak = Math.max(streak-1, 0); buildStreak();
+    showResult(false, 'Not quite — try again!', 'Say: '+w.hint);
+  }
+}
+
+/* ═══════════════════════
+   UI HELPERS
+═══════════════════════ */
+function setMicUI(state, msg) {
+  document.getElementById('micDot').className = 'mic-dot '+state;
+  const txt = document.getElementById('micTxt');
+  txt.className = 'mic-txt '+state;
+  txt.textContent = msg;
+}
+function showResult(correct, msg, sub) {
+  const banner = document.getElementById('resultBanner');
+  if (correct === null) {
+    banner.className = 'result-banner wrong';
+    document.getElementById('resultIcon').textContent = '⚠️';
+  } else {
+    banner.className = 'result-banner '+(correct?'correct':'wrong');
+    document.getElementById('resultIcon').textContent = correct?'✅':'❌';
+  }
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('resultSub').textContent = sub||'';
+}
+function clearResult() {
+  document.getElementById('resultBanner').className='result-banner';
+  document.getElementById('heardBox').className='heard-box';
+  document.getElementById('heardText').textContent='—';
+  document.getElementById('heardText').style.cssText='color:var(--muted)';
+  document.getElementById('nextBtn').disabled=true;
+}
+function showErr(msg) {
+  const b=document.getElementById('errBox'); b.innerHTML=msg; b.classList.add('show');
+}
+function hideErr() { document.getElementById('errBox').classList.remove('show'); }
+
+/* ═══════════════════════
+   AUDIO LEVEL METER
+═══════════════════════ */
+function startMeter() {
+  if (!mediaStream) return;
+  try {
+    audioCtx = audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+    const src=audioCtx.createMediaStreamSource(mediaStream);
+    analyser=audioCtx.createAnalyser(); analyser.fftSize=256;
+    src.connect(analyser);
+    document.getElementById('lvlBar').classList.add('on');
+    tickMeter();
+  } catch(e){}
+}
+function tickMeter() {
+  if (!analyser) return;
+  const d=new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(d);
+  document.getElementById('lvlFill').style.width=Math.min(d.reduce((a,b)=>a+b,0)/d.length*2.5,100)+'%';
+  rafId=requestAnimationFrame(tickMeter);
+}
+function stopMeter() {
+  cancelAnimationFrame(rafId); analyser=null;
+  document.getElementById('lvlBar').classList.remove('on');
+  document.getElementById('lvlFill').style.width='0%';
+}
+
+/* ═══════════════════════
+   CONFETTI
+═══════════════════════ */
+function celebrate() {
+  const colors=['#fbbf24','#f87171','#34d399','#a78bfa','#60a5fa','#fb923c'];
+  for (let i=0;i<28;i++) {
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`left:${Math.random()*100}vw;top:0;background:${colors[i%colors.length]};
+      animation-delay:${Math.random()*0.4}s;animation-duration:${0.9+Math.random()*0.6}s;
+      transform:rotate(${Math.random()*360}deg)`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),1600);
+  }
+}
+
+/* ═══════════════════════
+   CHIP ANIMATION
+═══════════════════════ */
+function animChips() {
+  const el = document.getElementById('wordBig');
+  const letters = cur().word.split('');
+  el.innerHTML = letters.map(l=>`<span>${l}</span>`).join('');
+  letters.forEach((_,i)=>{
+    setTimeout(()=>{
+      const spans=el.querySelectorAll('span');
+      if(spans[i]) { spans[i].classList.add('pop'); setTimeout(()=>spans[i].classList.remove('pop'),300); }
+    }, i*120);
+  });
+  setTimeout(()=>{ el.textContent=cur().word; },600);
+}
+
+/* ═══════════════════════
+   NAVIGATION
+═══════════════════════ */
+function doNext() {
+  animTimers.forEach(t=>clearTimeout(t)); animTimers=[];
+  idx = (idx+1) % WORDS.length;
+  clearResult(); renderCurrent();
+}
+function doSkip() {
+  streak=Math.max(streak-1,0); buildStreak(); doNext();
+}
+function doRetry() {
+  clearResult(); renderCurrent();
+}
+</script>
+</body>
+</html>
